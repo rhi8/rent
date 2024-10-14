@@ -590,6 +590,7 @@ dependencies = [
  "dotenvy",
  "log",
  "mockall",
+ "once_cell",
  "rocket",
  "rocket_cors",
  "rocket_prometheus",
