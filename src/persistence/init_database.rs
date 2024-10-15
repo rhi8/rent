@@ -5,6 +5,22 @@ use crate::persistence::postgres_db::PostgresDbPool;
 pub async fn create_initial_table() -> Result<(), Error> {
     let pool = &PostgresDbPool::global().pg_pool;
 
+    let create_game = r#"
+    CREATE TABLE IF NOT EXISTS game (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT NOT NULL,
+        available_to VARCHAR(20)[] NOT NULL
+    )
+    "#;
+
+    sqlx::query(create_game)
+        .execute(pool)
+        .await?;
+
+
+
+
     let create_game_item_table = r#"
     CREATE TABLE IF NOT EXISTS game_item (
         id SERIAL PRIMARY KEY,
@@ -16,6 +32,8 @@ pub async fn create_initial_table() -> Result<(), Error> {
     sqlx::query(create_game_item_table)
         .execute(pool)
         .await?;
+
+
 
     let create_game_barcode_table = r#"
     CREATE TABLE IF NOT EXISTS barcode (
@@ -29,18 +47,7 @@ pub async fn create_initial_table() -> Result<(), Error> {
         .execute(pool)
         .await?;
 
-    let create_game = r#"
-    CREATE TABLE IF NOT EXISTS game (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        description TEXT NOT NULL,
-        available_to VARCHAR(20)[] NOT NULL
-    )
-    "#;
 
-    sqlx::query(create_game)
-        .execute(pool)
-        .await?;
 
     let create_game_availability_table = r#"
     CREATE TABLE IF NOT EXISTS availability (
