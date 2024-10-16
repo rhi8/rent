@@ -91,7 +91,7 @@ impl Game {
         // Check if the game has an inventory (Vec<GameItem>)
         if let Some(inventory) = &self.inventory {
             for game_item in inventory {
-                let item_reference = game_item.reference.clone().unwrap();
+                let item_reference = game_item.reference.clone().unwrap_or_else(|| generate_uuid(REF_STR));
 
                 // Insert each game item into the 'games_item_table'
                 let game_item_result: PgQueryResult = query(
