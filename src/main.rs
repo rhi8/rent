@@ -1,16 +1,18 @@
 mod models;
 mod persistence;
 mod utils;
+mod routes;
 
-use rocket::launch;
+use rocket::{launch, routes};
 use crate::persistence::postgres_db::PostgresDbPool;
 use crate::persistence::postgres_db;
 use crate::persistence::init_database::create_initial_table;
+use crate::routes::routes::post_games;
 
 #[launch]
 async fn rocket() -> _ {
     let db_pool: PostgresDbPool = PostgresDbPool::get_db_pool().await;
-    postgres_db::INSTANCE.set(db_pool);
+    let _ = postgres_db::INSTANCE.set(db_pool);
 
     //initiate table
     match create_initial_table().await {
@@ -26,5 +28,6 @@ async fn rocket() -> _ {
 
 
     rocket::build()
+        .mount("/", routes![post_games])
 
 }

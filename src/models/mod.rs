@@ -1,1 +1,1 @@
-mod games;
+pub(crate) mod games;

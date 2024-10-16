@@ -1,5 +1,4 @@
 use sqlx::Error;
-use sqlx::postgres::PgPoolOptions;
 use crate::persistence::postgres_db::PostgresDbPool;
 
 pub async fn create_initial_table() -> Result<(), Error> {
