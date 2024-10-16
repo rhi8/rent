@@ -1,10 +1,13 @@
-use std::collections::HashSet;
-use rocket::Error;
+use std::fmt::Display;
 use rocket::serde::{Deserialize, Serialize};
-use rocket::serde::json::Json;
 use crate::persistence::postgres_db::PostgresDbPool;
+use crate::utils::id_generator::generate_uuid;
+use sqlx::postgres::PgQueryResult;
+use std::fmt;
+use sqlx::{Executor, PgPool, Postgres, Transaction};
 
-#[derive(Serialize, Deserialize,, Debug)]
+
+#[derive(Serialize, Deserialize, Debug)]
 enum SubscriptionType{
     Basic,
     Standard,
@@ -19,92 +22,108 @@ enum Platform{
     Xbox
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Game {
-    pub id: Option<i32>,//on adding to database primary key
+    pub reference: String,//primary key
     pub name: String,//god of war
     pub description: String,// this is a game that ...
     pub game_category: Vec<String>,//action adventure
     pub subscription_type: SubscriptionType,//basic standard
-    pub inventory :Vec<GameItem>
-
-
-
+    pub inventory :Option<Vec<GameItem>>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GameItem {
-    pub platform: String,   // e.g., "PlayStation 4" or "Xbox"
-    pub barcode: String,     // unique identifier for that specific copy
+    pub reference: Option<String>,
+    pub barcode: String,
+    pub platform: Vec<Platform>,   // e.g., "PlayStation 4" or "Xbox
     pub is_available: bool,  // availability status of this specific copy
 }
 
+static REF_STR: &str = "game_";
 
-
-
-
-
-
-/*
-
-impl Game<GameItem> {
-    pub async fn new(id: Option<i32>, name: String,  description: String, available_to: Vec<SubscriptionType>) -> Game {
-        Game {
-            name,
-            id,
-            description,
-            available_to,
-            game_availability: Some(HashSet::new()), // Start with an empty set of game_availability
-        }
+// Implement the Display trait for SubscriptionType
+impl Display for SubscriptionType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let subscription_str = match self {
+            SubscriptionType::Basic => "Basic",
+            SubscriptionType::Standard => "Standard",
+            SubscriptionType::Premium => "Premium",
+        };
+        write!(f, "{}", subscription_str)
     }
+}
+
+
+impl Game {
+
 
     pub async fn post_game (&self) -> Result<Option<Game>, sqlx::Error>{
 
+        let reference = generate_uuid(REF_STR);
+
         let pool = &PostgresDbPool::global().pg_pool;
+        let mut tx = pool.begin().await?;
 
-        // Start a transaction
-        let mut tx = pool.begin().await;
-
-        // Insert the game
-        let game_query = r#"
-        INSERT INTO game (name, description, available_to)
-        VALUES ($1, $2, $3)
-        RETURNING id, name, description, available_to
-    "#;
-
-        let game = sqlx::query_as::<_, Game>(game_query)
+        // Insert the new game into the 'games' table
+        let game_result: PgQueryResult = sqlx::query(
+            r#"
+        INSERT INTO games (reference, name, description, game_category, subscription_type)
+        VALUES ($1, $2, $3, $4, $5)
+        "#
+        )
+            .bind(&reference)
             .bind(&self.name)
             .bind(&self.description)
-            .bind(&self.available_to)
-            .fetch_one(&mut tx)
+            .bind(&self.game_category)
+            .bind(&self.subscription_type.to_string())
+            .execute(&mut tx)
             .await?;
 
-        // Insert availability records
-        let availability_query = r#"
-        INSERT INTO availability (game_id, game_item_id)
-        VALUES ($1, $2)
-    "#;
+        if let Some(inventory) = &self.inventory {
+            for game_item in inventory {
+                let item_reference = game_item.reference.clone().unwrap_or_else(|| generate_uuid(REF_STR));
 
-        for game_item in &self.game_availability {
-            // Assuming GameItem has a method to get its ID (you may need to adjust this)
-            let game_item_id = game_item.barcode_id; // Get the game_item_id from your GameItem struct
+                // Insert each game item into the 'games_item_table'
+                let game_item_result: PgQueryResult = sqlx::query(
+                    r#"
+                    INSERT INTO games_item_table (barcode, reference, platform, is_available)
+                    VALUES ($1, $2, $3, $4)
+                    "#
+                )
+                    .bind(&game_item.barcode)                // Barcode of the game item
+                    .bind(&reference)                        // Reference to the 'games' table
+                    .bind(&game_item.platform.iter().map(|p| p.to_string()).collect::<Vec<_>>())  // Platform (as a TEXT array)
+                    .bind(&game_item.is_available)           // Availability status
+                    .execute(&mut tx)
+                    .await?;
+            }
 
-            sqlx::query(availability_query)
-                .bind(game.id)
-                .bind(game_item_id)
-                .execute(&mut tx)
-                .await?;
+
+            tx.commit().await?;
+
+            println!("Game and game items inserted successfully with reference: {}", reference);
+            Ok(Some(Game {
+                reference,
+                name: self.name.clone(),
+                description: self.description.clone(),
+                game_category: self.game_category.clone(),
+                subscription_type: self.subscription_type.clone(),
+                inventory: self.inventory.clone(),
+            }))
         }
 
-        // Commit the transaction
-        tx.commit().await?;
 
-        Ok(Some(game))
+
+
+
+
+
 
     }
 
 
 }
 
-*/
+
 

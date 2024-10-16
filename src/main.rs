@@ -1,5 +1,7 @@
 mod models;
 mod persistence;
+mod utils;
+
 use rocket::launch;
 use crate::persistence::postgres_db::PostgresDbPool;
 use crate::persistence::postgres_db;
