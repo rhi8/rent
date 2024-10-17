@@ -7,7 +7,7 @@ use rocket::{launch, routes};
 use crate::persistence::postgres_db::PostgresDbPool;
 use crate::persistence::postgres_db;
 use crate::persistence::init_database::create_initial_table;
-use crate::routes::routes::post_games;
+use crate::routes::routes::{post_games, get_all_games_route};
 
 #[launch]
 async fn rocket() -> _ {
@@ -28,6 +28,6 @@ async fn rocket() -> _ {
 
 
     rocket::build()
-        .mount("/", routes![post_games])
+        .mount("/", routes![post_games,get_all_games_route])
 
 }

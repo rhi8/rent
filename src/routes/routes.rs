@@ -1,5 +1,5 @@
 //use rocket::serde::json::Json;
-use rocket::{http::Status, State};
+use rocket::{get, http::Status, State};
 use rocket::{post, serde::json::Json};
 use sqlx::PgPool;
 use crate::models::games::Game;
@@ -23,5 +23,23 @@ pub async fn post_games(game: Json<Game>) -> Result<Option<Json<Game>>, Status> 
         }
     }
 }
+
+#[get("/getgames", format = "application/json")]
+pub async fn get_all_games_route() -> Result<Json<Vec<Game>>, Status> {
+    match Game::get_all_games().await {
+        Ok(games) => {
+            // Return the games wrapped in a Json type
+            Ok(Json(games))
+        },
+        Err(e) => {
+            // Log the error for debugging
+            eprintln!("Error fetching games: {:?}", e);
+            Err(Status::InternalServerError)
+        }
+    }
+}
+
+
+
 
 

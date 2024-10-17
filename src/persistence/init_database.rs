@@ -25,7 +25,7 @@ pub async fn create_initial_table() -> Result<(), Error> {
     CREATE TABLE IF NOT EXISTS games_item_table (
         barcode VARCHAR PRIMARY KEY,
         reference VARCHAR REFERENCES games(reference) ON DELETE CASCADE,
-        platform TEXT[],  -- Array of strings
+        platform TEXT,  -- Array of strings
         is_available BOOLEAN
     )
     "#;
