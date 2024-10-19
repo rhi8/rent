@@ -11,7 +11,7 @@ pub async fn create_initial_table() -> Result<(), Error> {
         name VARCHAR NOT NULL,
         description TEXT NOT NULL,
         game_category TEXT[],  -- Array of strings
-        subscription_type VARCHAR NOT NULL
+        subscription_type TEXT[] NOT NULL
     )
     "#;
 
