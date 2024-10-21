@@ -13,38 +13,10 @@ use rocket::http::ext::IntoCollection;
 use rocket::http::Status;
 use crate::models;
 use serde_json::Value; // For JSON handling
+use crate::enums::subcription_enum::SubscriptionType;
 
-//Subscription methods
-#[derive(Serialize, Deserialize, Debug, Clone)] // Added Clone here
-enum SubscriptionType {
-    Basic,
-    Standard,
-    Premium,
-    InvalidSubscription
-}
 
-impl Display for SubscriptionType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let subscription_str = match self {
-            SubscriptionType::Basic => "Basic",
-            SubscriptionType::Standard => "Standard",
-            SubscriptionType::Premium => "Premium",
-            SubscriptionType::InvalidSubscription => "InvalidSubscription",
-        };
-        write!(f, "{}", subscription_str)
-    }
-}
 
-impl SubscriptionType {
-    fn str_to_enum(value: &str) -> SubscriptionType {
-        match value {
-            "Basic" => SubscriptionType::Basic,
-            "Standard" => SubscriptionType::Standard,
-            "Premium" => SubscriptionType::Premium,
-            _ => SubscriptionType::InvalidSubscription,
-        }
-    }
-}
 //platform methods
 #[derive(Serialize, Deserialize, Eq, Hash, PartialEq, Debug, Clone)] // Added Clone here
 enum Platform {

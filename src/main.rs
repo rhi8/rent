@@ -2,6 +2,7 @@ mod models;
 mod persistence;
 mod utils;
 mod routes;
+mod enums;
 
 use rocket::{launch, routes};
 use crate::persistence::postgres_db::PostgresDbPool;
