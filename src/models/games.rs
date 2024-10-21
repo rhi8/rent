@@ -5,51 +5,12 @@ use crate::utils::id_generator::generate_uuid;
 use sqlx::{Transaction, query, Postgres, Error, Row, query_as, FromRow, PgPool};
 use sqlx::Executor; // Importing Executor
 use sqlx::postgres::{PgQueryResult, PgRow};
-use std::fmt;
 use std::str::FromStr;
-use rocket::futures::future::err;
 use rocket::futures::TryFutureExt;
-use rocket::http::ext::IntoCollection;
-use rocket::http::Status;
-use crate::models;
 use serde_json::Value; // For JSON handling
-use crate::enums::subcription_enum::SubscriptionType;
+use crate::enums::subscription_enum::SubscriptionType;
+use crate::enums::platform_enum::Platform;
 
-
-
-//platform methods
-#[derive(Serialize, Deserialize, Eq, Hash, PartialEq, Debug, Clone)] // Added Clone here
-enum Platform {
-    Playstation3,
-    Playstation4,
-    Playstation5,
-    Xbox,
-    InvalidPlatform
-}
-
-impl Platform {
-    fn str_to_enum(value: &str) -> Platform {
-        match value {
-            "Playstation3" => Platform::Playstation3,
-            "Playstation4" => Platform::Playstation4,
-            "Playstation5" => Platform::Playstation5,
-            "Xbox" => Platform::Xbox,
-            _ => Platform::InvalidPlatform
-        }
-    }
-}
-impl Display for Platform {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let platform_str = match self {
-            Platform::Playstation3 => "Playstation3",
-            Platform::Playstation4 => "Playstation4",
-            Platform::Playstation5 => "Playstation5",
-            Platform::Xbox => "Xbox",
-            Platform::InvalidPlatform => "InvalidPlatform"
-        };
-        write!(f, "{}", platform_str)
-    }
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone,FromRow)] // Added Clone here
 pub struct Game {
@@ -148,11 +109,6 @@ impl Game {
             inventory: Some(game_item_results), // Return the updated inventory
         }))
     }
-
-
-        // Commit the transaction
-
-
 }
 
 impl Game {
