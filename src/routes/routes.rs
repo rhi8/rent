@@ -3,6 +3,27 @@ use rocket::{get, http::Status, put, State};
 use rocket::{post, serde::json::Json};
 use sqlx::{Error, PgPool};
 use crate::models::games::Game;
+use crate::models::customer::{RegisterCustomer};
+
+
+
+#[post("/registeruser", data = "<customer_details>", format = "application/json")]
+pub async fn register_customer_route(customer_details: Json<RegisterCustomer>) -> Result<Json<String>, Status> {
+    match customer_details.post_user().await {
+        Ok(jwt) => {
+            // Return the JWT token as a JSON response on success
+            Ok(Json(jwt))
+        }
+        Err(e) => {
+            // Log the error and return an appropriate HTTP status code
+            eprintln!("Error registering user: {:?}", e);
+            Err(Status::InternalServerError)
+        }
+    }
+}
+
+
+
 
 #[put("/editgames", data = "<game>", format = "application/json")]
 pub async fn edit_games_route(game: Json<Game>) -> Result<Option<Json<Game>>, Status> {

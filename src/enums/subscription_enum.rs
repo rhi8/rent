@@ -2,7 +2,7 @@ use std::fmt;
 use std::fmt::Display;
 use rocket::serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Clone)] // Added Clone here
-pub(crate) enum SubscriptionType {
+pub enum SubscriptionType {
     Basic,
     Standard,
     Premium,

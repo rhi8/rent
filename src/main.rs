@@ -3,12 +3,13 @@ mod persistence;
 mod utils;
 mod routes;
 mod enums;
+mod auth;
 
 use rocket::{launch, routes};
 use crate::persistence::postgres_db::PostgresDbPool;
 use crate::persistence::postgres_db;
 use crate::persistence::init_database::create_initial_table;
-use crate::routes::routes::{post_games, get_all_games_route, get_single_games_route, edit_games_route};
+use crate::routes::routes::{post_games, get_all_games_route, get_single_games_route, edit_games_route, register_customer_route};
 
 #[launch]
 async fn rocket() -> _ {
@@ -29,6 +30,6 @@ async fn rocket() -> _ {
 
 
     rocket::build()
-        .mount("/", routes![post_games,get_all_games_route,get_single_games_route,edit_games_route])
+        .mount("/", routes![post_games,get_all_games_route,get_single_games_route,edit_games_route,register_customer_route])
 
 }

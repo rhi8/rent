@@ -18,4 +18,10 @@ tokio = "1.40.0"
 async-trait = "0.1.82"
 once_cell = "1.19.0"
 uuid = { version = "1.2.2", features = ["v4"] }
+jsonwebtoken = "9.3.0"
+sha2 = "0.11.0-pre.4"
+hex = "0.4.3"
+time = "0.3.36"
+cookie = "0.17"
+
 
