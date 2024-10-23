@@ -1,6 +1,4 @@
-use jsonwebtoken::Header;
-//use log::Level::Error;
-use rocket::http::Cookie;
+
 use rocket::http::hyper::body::HttpBody;
 use serde::{Serialize, Deserialize};
 use sqlx::{Postgres, Transaction,Error};
@@ -59,6 +57,20 @@ impl RegisterCustomer {
 
         let mut password_tobe_hashed  = &self.password;
         let hashed_password = hash_password(password_tobe_hashed);
+
+
+        let customer_credentials_query = r#"
+        INSERT INTO customer_credentials (reference, email, password, role)
+        VALUES ($1, $2, $3, $4)
+        "#;
+
+        let customer_credentials_query_result = sqlx::query(customer_credentials_query)
+            .bind(&reference)
+            .bind(&self.email)
+            .bind(hashed_password)
+            .bind(RolesEnum::Customer.to_string())
+            .execute(pool)
+            .await.unwrap();
         //validation
 
         let customer_registration_query = r#"
@@ -76,19 +88,6 @@ impl RegisterCustomer {
             .execute(pool)
             .await?;
 
-        let customer_credentials_query = r#"
-        INSERT INTO customer_credentials (reference, email, password, role)
-        VALUES ($1, $2, $3, $4)
-        "#;
-
-        let customer_credentials_query_result = sqlx::query(customer_credentials_query)
-            .bind(&reference)
-            .bind(&self.email)
-            .bind(hashed_password)
-            .bind(RolesEnum::Customer.to_string())
-            .execute(pool)
-            .await.unwrap();
-
         tx.commit().await?;
 
         let customer_registration_response = customer_registration_query_result.rows_affected();
@@ -103,16 +102,7 @@ impl RegisterCustomer {
 
         let jwt = generate_jwt(reference.clone(), self.subscription_type.clone(),RolesEnum::Customer ).unwrap();
 
-        // let cookie = Cookie::build(("auth_token", jwt))
-        //     .http_only(true) // Prevents JavaScript access
-        //     .secure(true)    // Use only over HTTPS
-        //     .path("/")       // Accessible at the root
-        //     .max_age(time::Duration::hours(4))
-        //     .build();
-
         Ok(jwt)
-
-
 
     }
 
