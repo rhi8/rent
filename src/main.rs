@@ -4,6 +4,7 @@ mod utils;
 mod routes;
 mod enums;
 mod auth;
+mod email;
 
 use rocket::{launch, routes};
 use crate::persistence::postgres_db::PostgresDbPool;

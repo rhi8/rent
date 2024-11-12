@@ -2,12 +2,14 @@
 use rocket::http::hyper::body::HttpBody;
 use serde::{Serialize, Deserialize};
 use sqlx::{Postgres, Transaction,Error};
+use sqlx::postgres::PgRow;
 use crate::enums::subscription_enum::SubscriptionType;
 use crate::utils::id_generator::generate_uuid;
 use crate ::enums::roles_enum::RolesEnum;
 use crate::persistence::postgres_db::PostgresDbPool;
 use crate::utils::password_helper::hash_password;
-use crate::auth::authentication::generate_jwt;
+//use crate::auth::authentication::generate_jwt;
+use crate::auth::authentication::AuthenticateUser;
 
 
 #[derive(Serialize, Deserialize)]
@@ -49,6 +51,43 @@ struct  Login {
 
 static REF_STR: &str = "customer_";
 
+impl Login {
+
+
+    pub async fn login_user(&self)  {
+
+        let pool = &PostgresDbPool::global().pg_pool;
+
+        let find_customer_by_email_query = r#"
+        SELECT reference, email, password, role
+        FROM customer_credentials
+        WHERE email = $1
+        "#;
+
+        let find_customer_by_email_query_result = sqlx::query(find_customer_by_email_query)
+            .bind(&self.email)
+            .fetch_optional(pool)
+            .await;
+
+        match find_customer_by_email_query_result {
+          Some(_) => {},
+            None => {
+                Err(Error::RowNotFound);
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+    }
+}
+
 impl RegisterCustomer {
     pub  async fn post_user(&self) -> Result<String, Error> {
         let reference = generate_uuid(REF_STR);
@@ -70,7 +109,7 @@ impl RegisterCustomer {
             .bind(hashed_password)
             .bind(RolesEnum::Customer.to_string())
             .execute(pool)
-            .await.unwrap();
+            .await?;
         //validation
 
         let customer_registration_query = r#"
@@ -100,13 +139,11 @@ impl RegisterCustomer {
             println!("Query was unsuccessful for customer credentials: {}", customer_credentials_query_response);
         }
 
-        let jwt = generate_jwt(reference.clone(), self.subscription_type.clone(),RolesEnum::Customer ).unwrap();
+        let jwt = AuthenticateUser::generate_jwt(reference.clone(), self.subscription_type.clone(),RolesEnum::Customer ).unwrap();
 
         Ok(jwt)
 
     }
-
-
 }
 
 
